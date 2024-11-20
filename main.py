@@ -113,16 +113,6 @@ def main():
         page_icon="📊",
         layout="centered"
     )
-
-    import streamlit.components.v1 as components
-    components.html("""
-        <script>
-            const watermark = document.querySelector('a[href="https://streamlit.io/cloud"]');
-            if (watermark) {
-                watermark.remove();
-            }
-        </script>
-    """, height=0)
     
     st.markdown("""
         <style>
