@@ -111,28 +111,44 @@ def main():
     st.set_page_config(
         page_title="Negotiations Survey",
         page_icon="📊",
-        layout="wide"
+        layout="centered"
     )
     
     st.markdown("""
         <style>
-        /* Base styles */
+        /* Responsive layout */
+        .main .block-container {
+            max-width: 1200px;
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+        
+        /* Content width control */
+        .content-wrapper {
+            width: min(90%, 800px);
+            margin: 0 auto;
+        }
+        
+        /* Radio button styling */
         .stRadio > div {
-            padding: 8px;
+            padding: 12px;
             background-color: var(--background-color);
-            border-radius: 5px;
-            margin: 5px 0;
+            border-radius: 8px;
+            margin: 8px 0;
+            width: 100%;
         }
         
         .stRadio > div > div {
-            gap: 0 !important;
+            gap: 8px !important;
         }
         
         .stRadio > div > div > label {
-            padding: 4px 10px !important;
+            padding: 8px 16px !important;
+            margin: 4px 0;
+            width: 100%;
         }
         
-        /* Dark mode specific styles */
+        /* Dark mode support */
         @media (prefers-color-scheme: dark) {
             .stRadio > div {
                 background-color: rgba(255, 255, 255, 0.1);
@@ -143,33 +159,88 @@ def main():
             .question-text {
                 color: white !important;
             }
-            .markdown-text-container {
-                color: white !important;
+            .results-container {
+                background-color: rgba(255, 255, 255, 0.1) !important;
+            }
+            .results-container h1 {
+                color: #3b82f6 !important;
             }
         }
         
-        .stButton > button {
-            width: 200px;
+        /* Progress indicator */
+        .stProgress {
+            margin: 1.5rem 0;
         }
-        .email-input {
-            max-width: 500px;
-            margin: 0 auto;
-        }
-        .stProgress > div > div > div > div {
-            background-color: #00cc00;
-        }
+        
+        /* Question styling */
         .question-text {
-            margin-bottom: 5px;
-            font-size: 1rem;
+            margin: 1.5rem 0 0.75rem 0;
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+        
+        /* Results styling */
+        .results-container {
+            padding: 2rem;
+            background-color: #f8fafc;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin: 2rem 0;
+        }
+        
+        .results-container h2 {
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        
+        .results-container h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: bold;
+            color: #2563eb;
+            margin: 1.5rem 0;
+        }
+        
+        /* Mobile optimization */
+        @media (max-width: 640px) {
+            .main .block-container {
+                padding: 1rem;
+            }
+            
+            .content-wrapper {
+                width: 95%;
+            }
+            
+            .stRadio > div {
+                padding: 8px;
+            }
+            
+            .question-text {
+                font-size: 1rem;
+            }
         }
 
-        /* Adjust question spacing */
-        [data-testid="stVerticalBlock"] > div {
+        /* Custom width for elements */
+        .element-container {
+            width: 100% !important;
+        }
+        
+        .css-1544g2n {
             padding: 0 !important;
-            margin-bottom: 15px !important;
+        }
+        
+        .css-1y4p8pa {
+            max-width: none !important;
+            width: 100% !important;
+        }
+        
+        .stMarkdown {
+            width: 100% !important;
         }
         </style>
     """, unsafe_allow_html=True)
+    
+    st.markdown('<div class="content-wrapper">', unsafe_allow_html=True)
     
     if 'page' not in st.session_state:
         st.session_state.page = 'intro'
@@ -202,36 +273,35 @@ def main():
         
         ### Time Required
         Approximately 20 minutes
-        """, unsafe_allow_html=True)
+        """)
         
         st.markdown("---")
         
         st.markdown("### 📧 Enter Your Email to Begin")
-        col1, col2, col3 = st.columns([1,2,1])
-        with col2:
-            email_input = st.text_input(
-                "Email address:",
-                value=st.session_state.email,
-                key="email_input",
-                help="Please enter a valid email address to receive your results"
-            )
+        
+        email_input = st.text_input(
+            "Email address:",
+            value=st.session_state.email,
+            key="email_input",
+            help="Please enter a valid email address to receive your results"
+        )
 
-            if email_input:
-                if is_valid_email(email_input):
-                    st.session_state.email = email_input
-                    st.session_state.email_validated = True
-                    
-                    if validate_email_connection():
-                        st.success("✅ Email verified successfully!")
-                        if st.button("Begin Survey", key="start_survey", use_container_width=True):
-                            st.session_state.page = 'survey'
-                            st.rerun()
-                    else:
-                        st.error("Unable to verify email connection. Please try again later.")
+        if email_input:
+            if is_valid_email(email_input):
+                st.session_state.email = email_input
+                st.session_state.email_validated = True
+                
+                if validate_email_connection():
+                    st.success("✅ Email verified successfully!")
+                    if st.button("Begin Survey", key="start_survey", use_container_width=True):
+                        st.session_state.page = 'survey'
+                        st.rerun()
                 else:
-                    st.error("Please enter a valid email address")
+                    st.error("Unable to verify email connection. Please try again later.")
             else:
-                st.info("Please enter your email address to begin the survey")
+                st.error("Please enter a valid email address")
+        else:
+            st.info("Please enter your email address to begin the survey")
     
     elif st.session_state.page == 'survey':
         st.markdown(f"📧 Results will be sent to: **{st.session_state.email}**")
@@ -278,14 +348,12 @@ def main():
         
         st.markdown("---")
         
-        col1, col2, col3 = st.columns([1,2,1])
-        with col2:
-            if len(st.session_state.responses) == 26:
-                if st.button("Submit Survey", key="submit_survey", use_container_width=True):
-                    st.session_state.page = 'results'
-                    st.rerun()
-            else:
-                st.warning("Please answer all questions before submitting.")
+        if len(st.session_state.responses) == 26:
+            if st.button("Submit Survey", use_container_width=True):
+                st.session_state.page = 'results'
+                st.rerun()
+        else:
+            st.warning("Please answer all questions before submitting.")
     
     elif st.session_state.page == 'results':
         st.markdown(f"📧 Results will be sent to: **{st.session_state.email}**")
@@ -296,9 +364,9 @@ def main():
         total_score = calculate_score(st.session_state.responses)
         
         st.markdown(f"""
-        <div style='text-align: center; padding: 20px; background-color: #f0f2f6; border-radius: 10px;'>
+        <div class="results-container">
             <h2>Your Negotiation Quotient</h2>
-            <h1 style='color: #0066cc;'>{total_score}</h1>
+            <h1>{total_score}</h1>
             <p>(Score range: -298 to +341)</p>
         </div>
         """, unsafe_allow_html=True)
@@ -317,12 +385,12 @@ def main():
             else:
                 st.error("Failed to send results. Please contact support.")
         
-        col1, col2, col3 = st.columns([1,2,1])
-        with col2:
-            if st.button("Take Survey Again", key="restart_survey", use_container_width=True):
-                st.session_state.page = 'intro'
-                st.session_state.responses = {}
-                st.rerun()
+        if st.button("Take Survey Again", use_container_width=True):
+            st.session_state.page = 'intro'
+            st.session_state.responses = {}
+            st.rerun()
+    
+    st.markdown('</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
