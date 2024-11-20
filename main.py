@@ -4,6 +4,8 @@ import smtplib
 import re
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from datetime import datetime
+import os
 
 SCORING_KEY = {
     "1": {"a": 20, "b": 15, "c": 5, "d": -10, "e": -10},
@@ -33,6 +35,38 @@ SCORING_KEY = {
     "25": {"a": 12, "b": 8, "c": 4, "d": -5, "e": -10},
     "26": {"a": 15, "b": 10, "c": 0, "d": -10, "e": -15}
 }
+
+def save_to_json(email, score):
+    """Save survey submission to a JSON file"""
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    new_submission = {
+        "email": email,
+        "score": score,
+        "timestamp": timestamp
+    }
+    
+    filename = "survey_submissions.json"
+    
+    try:
+        # Read existing data
+        if os.path.exists(filename):
+            with open(filename, 'r') as f:
+                data = json.load(f)
+        else:
+            data = []
+        
+        # Add new submission
+        data.append(new_submission)
+        
+        # Write back to file
+        with open(filename, 'w') as f:
+            json.dump(data, f, indent=4)
+            
+        return True
+    except Exception as e:
+        st.error(f"Error saving submission: {str(e)}")
+        return False
 
 def is_valid_email(email):
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
@@ -138,16 +172,6 @@ def main():
             width: 100%;
         }
         
-        .stRadio > div > div {
-            gap: 8px !important;
-        }
-        
-        .stRadio > div > div > label {
-            padding: 8px 16px !important;
-            margin: 4px 0;
-            width: 100%;
-        }
-        
         /* Dark mode support */
         @media (prefers-color-scheme: dark) {
             .stRadio > div {
@@ -189,18 +213,6 @@ def main():
             margin: 2rem 0;
         }
         
-        .results-container h2 {
-            margin-bottom: 1rem;
-            font-size: 1.5rem;
-        }
-        
-        .results-container h1 {
-            font-size: clamp(2rem, 5vw, 3.5rem);
-            font-weight: bold;
-            color: #2563eb;
-            margin: 1.5rem 0;
-        }
-        
         /* Mobile optimization */
         @media (max-width: 640px) {
             .main .block-container {
@@ -210,31 +222,10 @@ def main():
             .content-wrapper {
                 width: 95%;
             }
-            
-            .stRadio > div {
-                padding: 8px;
-            }
-            
-            .question-text {
-                font-size: 1rem;
-            }
         }
 
         /* Custom width for elements */
         .element-container {
-            width: 100% !important;
-        }
-        
-        .css-1544g2n {
-            padding: 0 !important;
-        }
-        
-        .css-1y4p8pa {
-            max-width: none !important;
-            width: 100% !important;
-        }
-        
-        .stMarkdown {
             width: 100% !important;
         }
         </style>
@@ -362,6 +353,9 @@ def main():
         st.title("Survey Results")
         
         total_score = calculate_score(st.session_state.responses)
+        
+        # Save submission to JSON
+        save_to_json(st.session_state.email, total_score)
         
         st.markdown(f"""
         <div class="results-container">
