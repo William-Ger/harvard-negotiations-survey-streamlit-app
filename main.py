@@ -54,7 +54,7 @@ def send_email(recipient_email, first_name, last_name, total_score):
     sender_password = st.secrets["PASSWORD"]
     
     # Hardcoded CC recipients - replace with your desired email addresses
-    cc_recipients = ["bburchett@gibson4.com","wgerstung@gibson4.com"]  # Replace with actual emails
+    cc_recipients = ["bburchett@gibson4.com","wgerstung@gibson4.com","wpowers@gibson4.com","lshepherd@gibson4.com"]  # Replace with actual emails
     
     msg = MIMEMultipart()
     msg['From'] = sender_email
