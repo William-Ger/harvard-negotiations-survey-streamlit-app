@@ -113,6 +113,16 @@ def main():
         page_icon="📊",
         layout="centered"
     )
+
+    import streamlit.components.v1 as components
+    components.html("""
+        <script>
+            const watermark = document.querySelector('a[href="https://streamlit.io/cloud"]');
+            if (watermark) {
+                watermark.remove();
+            }
+        </script>
+    """, height=0)
     
     st.markdown("""
         <style>
@@ -254,22 +264,6 @@ def main():
     if st.session_state.page == 'intro':
         st.title("🤝 Negotiations Training")
         st.header("NEGOTIATION SURVEY")
-
-        # Hide Streamlit UI elements
-        hide_streamlit_style = """
-            <style>
-            #MainMenu {visibility: hidden;}
-            footer {visibility: hidden !important;}
-            header {visibility: hidden;}
-            [data-testid="stToolbar"] {visibility: hidden !important;}
-            [data-testid="stDecoration"] {visibility: hidden !important;}
-            [data-testid="stStatusWidget"] {visibility: hidden !important;}
-            [data-testid="stBottomRightCorner"] {
-                transform: translateY(200vh) !important;
-            }
-            </style>
-        """
-        st.markdown(hide_streamlit_style, unsafe_allow_html=True)
         
         st.markdown("""
         ### Purpose
