@@ -4,8 +4,6 @@ import smtplib
 import re
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from datetime import datetime
-import os
 
 SCORING_KEY = {
     "1": {"a": 20, "b": 15, "c": 5, "d": -10, "e": -10},
@@ -36,38 +34,6 @@ SCORING_KEY = {
     "26": {"a": 15, "b": 10, "c": 0, "d": -10, "e": -15}
 }
 
-def save_to_json(email, score):
-    """Save survey submission to a JSON file"""
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-    new_submission = {
-        "email": email,
-        "score": score,
-        "timestamp": timestamp
-    }
-    
-    filename = "survey_submissions.json"
-    
-    try:
-        # Read existing data
-        if os.path.exists(filename):
-            with open(filename, 'r') as f:
-                data = json.load(f)
-        else:
-            data = []
-        
-        # Add new submission
-        data.append(new_submission)
-        
-        # Write back to file
-        with open(filename, 'w') as f:
-            json.dump(data, f, indent=4)
-            
-        return True
-    except Exception as e:
-        st.error(f"Error saving submission: {str(e)}")
-        return False
-
 def is_valid_email(email):
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(pattern, email) is not None
@@ -83,13 +49,17 @@ def validate_email_connection():
         st.error(f"Email server connection error: {str(e)}")
         return False
 
-def send_email(recipient_email, total_score):
+def send_email(recipient_email, first_name, last_name, total_score):
     sender_email = st.secrets["EMAIL"]
     sender_password = st.secrets["PASSWORD"]
+    
+    # Hardcoded CC recipients - replace with your desired email addresses
+    cc_recipients = ["bburchett@gibson4.com","wgerstung@gibson4.com"]  # Replace with actual emails
     
     msg = MIMEMultipart()
     msg['From'] = sender_email
     msg['To'] = recipient_email
+    msg['Cc'] = ', '.join(cc_recipients)
     msg['Subject'] = "Your Negotiation Survey Results"
     
     if total_score >= 250:
@@ -106,6 +76,8 @@ def send_email(recipient_email, total_score):
                         "negotiating skills can be improved with practice and proper training.")
     
     body = f"""
+    Dear {first_name} {last_name},
+
     Thank you for completing the Negotiation Survey!
     
     Your Total Score: {total_score}
@@ -128,7 +100,11 @@ def send_email(recipient_email, total_score):
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
         server.login(sender_email, sender_password)
-        server.send_message(msg)
+        
+        # Get all recipients for sending (primary recipient + CC recipients)
+        all_recipients = [recipient_email] + cc_recipients
+        
+        server.send_message(msg, sender_email, all_recipients)
         server.quit()
         return True
     except Exception as e:
@@ -147,6 +123,20 @@ def main():
         page_icon="📊",
         layout="centered"
     )
+    
+    # Add JavaScript to scroll to top when page changes
+    st.markdown("""
+        <script>
+            var observer = new MutationObserver(function(mutations) {
+                window.scrollTo(0, 0);
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        </script>
+    """, unsafe_allow_html=True)
     
     st.markdown("""
         <style>
@@ -169,6 +159,16 @@ def main():
             background-color: var(--background-color);
             border-radius: 8px;
             margin: 8px 0;
+            width: 100%;
+        }
+        
+        .stRadio > div > div {
+            gap: 8px !important;
+        }
+        
+        .stRadio > div > div > label {
+            padding: 8px 16px !important;
+            margin: 4px 0;
             width: 100%;
         }
         
@@ -213,6 +213,18 @@ def main():
             margin: 2rem 0;
         }
         
+        .results-container h2 {
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        
+        .results-container h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: bold;
+            color: #2563eb;
+            margin: 1.5rem 0;
+        }
+        
         /* Mobile optimization */
         @media (max-width: 640px) {
             .main .block-container {
@@ -222,10 +234,31 @@ def main():
             .content-wrapper {
                 width: 95%;
             }
+            
+            .stRadio > div {
+                padding: 8px;
+            }
+            
+            .question-text {
+                font-size: 1rem;
+            }
         }
 
         /* Custom width for elements */
         .element-container {
+            width: 100% !important;
+        }
+        
+        .css-1544g2n {
+            padding: 0 !important;
+        }
+        
+        .css-1y4p8pa {
+            max-width: none !important;
+            width: 100% !important;
+        }
+        
+        .stMarkdown {
             width: 100% !important;
         }
         </style>
@@ -233,14 +266,36 @@ def main():
     
     st.markdown('<div class="content-wrapper">', unsafe_allow_html=True)
     
+    # Initialize session state
     if 'page' not in st.session_state:
         st.session_state.page = 'intro'
     if 'responses' not in st.session_state:
         st.session_state.responses = {}
     if 'email' not in st.session_state:
         st.session_state.email = ''
+    if 'first_name' not in st.session_state:
+        st.session_state.first_name = ''
+    if 'last_name' not in st.session_state:
+        st.session_state.last_name = ''
     if 'email_validated' not in st.session_state:
         st.session_state.email_validated = False
+    if 'scroll_to_top' not in st.session_state:
+        st.session_state.scroll_to_top = True
+
+    # Function to change page and trigger scroll
+    def change_page(new_page):
+        st.session_state.page = new_page
+        st.session_state.scroll_to_top = True
+        st.rerun()
+
+    # Handle page navigation with auto-scroll
+    if st.session_state.scroll_to_top:
+        st.markdown("""
+            <script>
+                window.scrollTo(0, 0);
+            </script>
+        """, unsafe_allow_html=True)
+        st.session_state.scroll_to_top = False
     
     if st.session_state.page == 'intro':
         st.title("🤝 Negotiations Training")
@@ -268,8 +323,24 @@ def main():
         
         st.markdown("---")
         
-        st.markdown("### 📧 Enter Your Email to Begin")
+        st.markdown("### 📧 Enter Your Information")
         
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            first_name = st.text_input(
+                "First Name:",
+                value=st.session_state.first_name,
+                key="first_name_input"
+            )
+        
+        with col2:
+            last_name = st.text_input(
+                "Last Name:",
+                value=st.session_state.last_name,
+                key="last_name_input"
+            )
+            
         email_input = st.text_input(
             "Email address:",
             value=st.session_state.email,
@@ -277,25 +348,27 @@ def main():
             help="Please enter a valid email address to receive your results"
         )
 
-        if email_input:
+        if email_input and first_name and last_name:
             if is_valid_email(email_input):
                 st.session_state.email = email_input
+                st.session_state.first_name = first_name
+                st.session_state.last_name = last_name
                 st.session_state.email_validated = True
                 
                 if validate_email_connection():
-                    st.success("✅ Email verified successfully!")
+                    st.success("✅ Information verified successfully!")
                     if st.button("Begin Survey", key="start_survey", use_container_width=True):
-                        st.session_state.page = 'survey'
-                        st.rerun()
+                        change_page('survey')
                 else:
                     st.error("Unable to verify email connection. Please try again later.")
             else:
                 st.error("Please enter a valid email address")
         else:
-            st.info("Please enter your email address to begin the survey")
+            st.info("Please enter all required information to begin the survey")
     
     elif st.session_state.page == 'survey':
-        st.markdown(f"📧 Results will be sent to: **{st.session_state.email}**")
+        st.markdown(f"""📧 Results will be sent to: **{st.session_state.first_name} {st.session_state.last_name}** 
+        ({st.session_state.email})""")
         st.markdown("---")
         
         st.title("Negotiator Survey")
@@ -305,7 +378,7 @@ def main():
             with open('content/quiz_data.json', 'r', encoding='utf-8') as f:
                 questions = json.load(f)
         except FileNotFoundError:
-            st.error("Question file not found. Please ensure 'quiz_data.json' exists in the 'content' folder.")
+            st.error("Question file not found. Please ensure 'quiz_data.json' exists in the current directory.")
             return
         except json.JSONDecodeError:
             st.error("Error reading questions file. Please ensure the JSON format is correct.")
@@ -341,21 +414,18 @@ def main():
         
         if len(st.session_state.responses) == 26:
             if st.button("Submit Survey", use_container_width=True):
-                st.session_state.page = 'results'
-                st.rerun()
+                change_page('results')
         else:
             st.warning("Please answer all questions before submitting.")
     
     elif st.session_state.page == 'results':
-        st.markdown(f"📧 Results will be sent to: **{st.session_state.email}**")
+        st.markdown(f"""📧 Results will be sent to: **{st.session_state.first_name} {st.session_state.last_name}** 
+        ({st.session_state.email})""")
         st.markdown("---")
         
         st.title("Survey Results")
         
         total_score = calculate_score(st.session_state.responses)
-        
-        # Save submission to JSON
-        save_to_json(st.session_state.email, total_score)
         
         st.markdown(f"""
         <div class="results-container">
@@ -374,15 +444,18 @@ def main():
             st.warning("📚 You should pay particular attention to negotiation training materials.")
         
         with st.spinner("Sending results to your email..."):
-            if send_email(st.session_state.email, total_score):
+            if send_email(st.session_state.email, st.session_state.first_name, 
+                         st.session_state.last_name, total_score):
                 st.success("✅ Results have been sent to your email!")
             else:
                 st.error("Failed to send results. Please contact support.")
         
         if st.button("Take Survey Again", use_container_width=True):
-            st.session_state.page = 'intro'
             st.session_state.responses = {}
-            st.rerun()
+            st.session_state.first_name = ''
+            st.session_state.last_name = ''
+            st.session_state.email = ''
+            change_page('intro')
     
     st.markdown('</div>', unsafe_allow_html=True)
 
