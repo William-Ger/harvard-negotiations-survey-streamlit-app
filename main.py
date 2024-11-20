@@ -114,13 +114,18 @@ def main():
         layout="centered"
     )
     
-    st.markdown("""
+    # Hide Streamlit UI elements
+    hide_streamlit_style = """
         <style>
-        /* Hide Streamlit elements */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
-        
+        </style>
+    """
+    st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+    
+    st.markdown("""
+        <style>
         /* Responsive layout */
         .main .block-container {
             max-width: 1200px;
@@ -257,7 +262,7 @@ def main():
         st.session_state.email_validated = False
     
     if st.session_state.page == 'intro':
-        st.title("🤝 Negotiations Training")
+        st.title("🤝 Negotiations Training Update 1:49")
         st.header("NEGOTIATION SURVEY")
         
         st.markdown("""
