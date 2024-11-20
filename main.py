@@ -116,6 +116,11 @@ def main():
     
     st.markdown("""
         <style>
+        /* Hide Streamlit elements */
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+        
         /* Responsive layout */
         .main .block-container {
             max-width: 1200px;
