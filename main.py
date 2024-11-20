@@ -255,6 +255,7 @@ def main():
         st.title("🤝 Negotiations Training")
         st.header("NEGOTIATION SURVEY")
 
+        # Hide Streamlit UI elements
         hide_streamlit_style = """
             <style>
             #MainMenu {visibility: hidden;}
@@ -263,7 +264,10 @@ def main():
             [data-testid="stToolbar"] {visibility: hidden !important;}
             [data-testid="stDecoration"] {visibility: hidden !important;}
             [data-testid="stStatusWidget"] {visibility: hidden !important;}
-            div[data-testid="stBottomRightCorner"] {visibility: hidden !important;}
+            ._container_gzau3_1 {display: none !important;}
+            ._viewerBadge_nim44_23 {display: none !important;}
+            ._profileContainer_gzau3_53 {display: none !important;}
+            [data-testid="stBottomRightCorner"] {visibility: hidden !important;}
             </style>
         """
         st.markdown(hide_streamlit_style, unsafe_allow_html=True)
