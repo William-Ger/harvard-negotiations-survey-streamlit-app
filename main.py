@@ -162,10 +162,6 @@ def main():
                 --primary-color: #64B5F6;
             }
         }
-
-        html {
-            scroll-behavior: auto !important;
-        }
         </style>
     """, unsafe_allow_html=True)
 
