@@ -162,6 +162,11 @@ def main():
                 --primary-color: #64B5F6;
             }
         }
+
+        html {
+            scroll-behavior: auto !important;
+            overflow-y: scroll;
+        }
         </style>
     """, unsafe_allow_html=True)
 
@@ -242,32 +247,37 @@ def main():
             st.subheader("How Good Are You As A Negotiator?")
             
             try:
-                with open('content/quiz_data.json', 'r') as f:
+                with open('content/quiz_data.json', 'r', encoding='utf-8') as f:
                     questions = json.load(f)
             except FileNotFoundError:
                 questions = json.loads(st.session_state.get('quiz_data', '{}'))
             
-            current_questions_answered = len([key for key in st.session_state.responses.keys() if st.session_state.responses[key]])
-            progress = current_questions_answered / 26
-            st.progress(progress)
-            st.write(f"Progress: {int(progress * 100)}% ({current_questions_answered}/26 questions answered)")
+            # Track responses in real time
+            current_responses = {}
             
             for q_num in range(1, 27):
                 question = questions[str(q_num)]
-                st.markdown(f"**{q_num}. {question['text']}**")
+                st.markdown(f"**{q_num}. {question['text']}**".replace('â€"', '–'))
                 options = question['options']
                 response = st.radio(
                     f"Question {q_num}",
                     options.items(),
-                    format_func=lambda x: x[1],
+                    format_func=lambda x: x[1].replace('â€"', '–'),
                     key=f"q{q_num}",
                     index=None,
                     label_visibility="collapsed"
                 )
                 if response:
-                    st.session_state.responses[str(q_num)] = response[0]
-                elif str(q_num) in st.session_state.responses:
-                    del st.session_state.responses[str(q_num)]
+                    current_responses[str(q_num)] = response[0]
+            
+            # Update session state with current responses
+            st.session_state.responses = current_responses
+            
+            # Calculate progress based on current responses
+            answered_count = len(current_responses)
+            progress = answered_count / 26
+            st.progress(progress)
+            st.write(f"Progress: {int(progress * 100)}% ({answered_count}/26 questions answered)")
             
             st.markdown("---")
             
