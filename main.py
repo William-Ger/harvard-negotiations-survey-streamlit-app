@@ -225,11 +225,8 @@ def main():
                                    disabled=not (email and first_name and last_name and 
                                                is_valid_email(email) and validate_email_connection()))
             
-            if email and first_name and last_name:
-                if not is_valid_email(email):
-                    st.error("Please enter a valid email address")
-            else:
-                st.info("Please enter all required information to begin the survey")
+            if not is_valid_email(email) and email:
+                st.error("Please enter a valid email address")
             
             if start_button:
                 st.session_state.container.empty()
@@ -250,9 +247,10 @@ def main():
             except FileNotFoundError:
                 questions = json.loads(st.session_state.get('quiz_data', '{}'))
             
-            progress = (len(st.session_state.responses) + 1) / 26
+            current_questions_answered = len([key for key in st.session_state.responses.keys() if st.session_state.responses[key]])
+            progress = current_questions_answered / 26
             st.progress(progress)
-            st.write(f"Progress: {int(progress * 100)}% ({len(st.session_state.responses)}/26 questions answered)")
+            st.write(f"Progress: {int(progress * 100)}% ({current_questions_answered}/26 questions answered)")
             
             for q_num in range(1, 27):
                 question = questions[str(q_num)]
@@ -268,6 +266,8 @@ def main():
                 )
                 if response:
                     st.session_state.responses[str(q_num)] = response[0]
+                elif str(q_num) in st.session_state.responses:
+                    del st.session_state.responses[str(q_num)]
             
             st.markdown("---")
             
