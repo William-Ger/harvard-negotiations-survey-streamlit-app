@@ -62,36 +62,28 @@ def send_email(recipient_email, first_name, last_name, total_score):
     msg['Subject'] = "Your Negotiation Survey Results"
     
     if total_score >= 250:
-        interpretation = ("You are probably a pretty good negotiator already. Your score indicates "
-                        "that you possess many of the key traits and skills associated with successful negotiators.")
+        interpretation = "You are probably a pretty good negotiator already!"
     elif total_score >= 181:
-        interpretation = ("You already have many of the traits which contribute to successful negotiating. "
-                        "This course will help you build upon your existing strengths and develop new skills.")
-    elif total_score >= 0:
-        interpretation = ("You should pay particular attention to the negotiation training materials. "
-                        "While you have some negotiating skills, there's significant room for improvement.")
+        interpretation = "You already have many of the traits which contribute to successful negotiating."
     else:
-        interpretation = ("You should focus intensively on developing your negotiation skills. Remember, "
-                        "negotiating skills can be improved with practice and proper training.")
+        interpretation = "You should pay particular attention to the negotiation training materials. While you have some negotiating skills, there's significant room for improvement."
     
-    body = f"""
-    Dear {first_name} {last_name},
+    body = f"""Dear {first_name} {last_name},
 
-    Thank you for completing the Negotiation Survey!
-    
-    Your Total Score: {total_score}
-    (Score range: -298 to +341)
-    
-    Score Interpretation:
-    {interpretation}
-    
-    Key Score Ranges:
-    - 250-341: Excellent negotiator
-    - 181-250: Good negotiator with room for improvement
-    - Below 181: Focus on developing negotiation skills
-    
-    Remember: Negotiating skills can be improved through practice and training!
-    """
+Thank you for completing the Negotiation Survey!
+
+Your Total Score: {total_score}
+(Score range: -298 to +341)
+
+Score Interpretation:
+{interpretation}
+
+Key Score Ranges:
+- 250-341: Excellent negotiator
+- 181-250: Good negotiator with room for improvement
+- Below 181: Focus on developing negotiation skills
+
+Remember: Negotiating skills can be improved through practice and training!"""
     
     msg.attach(MIMEText(body, 'plain'))
     
@@ -133,8 +125,8 @@ def main():
         .main .block-container {
             max-width: 1200px;
             padding-top: 30px;
-            padding-bottom: 0;  /* Removed bottom padding */
-            margin-bottom: 0;   /* Removed bottom margin */
+            padding-bottom: 0;
+            margin-bottom: 0;
         }
         .element-container, .stMarkdown {
             width: 100% !important;
@@ -153,12 +145,22 @@ def main():
         footer {
             visibility: hidden;
         }
-        /* Ensure content starts at top when navigating */
         .main {
             scroll-behavior: auto !important;
         }
         .stButton button {
             margin-bottom: 0;
+        }
+        :root {
+            --background-color: #f0f2f6;
+            --primary-color: #2196F3;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background-color: rgba(255, 255, 255, 0.1);
+                --primary-color: #64B5F6;
+            }
         }
         </style>
     """, unsafe_allow_html=True)
@@ -282,9 +284,9 @@ def main():
             
             st.title("Survey Results")
             st.markdown(f"""
-            <div style="text-align: center; padding: 2rem; background-color: #f0f2f6; border-radius: 10px;">
+            <div style="text-align: center; padding: 2rem; background-color: var(--background-color); border-radius: 10px; border: 1px solid var(--primary-color);">
                 <h2>Your Negotiation Quotient</h2>
-                <h1 style="font-size: 3.5rem; color: #2196F3;">{total_score}</h1>
+                <h1 style="font-size: 3.5rem; color: var(--primary-color);">{total_score}</h1>
                 <p>(Score range: -298 to +341)</p>
             </div>
             """, unsafe_allow_html=True)
