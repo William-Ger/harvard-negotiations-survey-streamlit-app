@@ -114,6 +114,32 @@ def main():
         initial_sidebar_state="collapsed"
     )
 
+    # Add JavaScript for scrolling to top
+    js = """
+    <script>
+    // Function to scroll to top
+    function scrollToTop() {
+        window.scrollTo(0, 0);
+    }
+    
+    // Call immediately
+    scrollToTop();
+    
+    // Also call when the page content changes
+    const observer = new MutationObserver(function(mutations) {
+        scrollToTop();
+    });
+    
+    // Start observing the main content area for changes
+    observer.observe(document.querySelector('section.main'), {
+        childList: true,
+        subtree: true
+    });
+    </script>
+    """
+    
+    st.markdown(js, unsafe_allow_html=True)
+
     # CSS for fixed header and scroll behavior
     st.markdown("""
         <style>
