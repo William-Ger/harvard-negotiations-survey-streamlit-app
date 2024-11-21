@@ -53,8 +53,7 @@ def send_email(recipient_email, first_name, last_name, total_score):
     sender_email = st.secrets["EMAIL"]
     sender_password = st.secrets["PASSWORD"]
     
-    # Hardcoded CC recipients - replace with your desired email addresses
-    cc_recipients = ["bburchett@gibson4.com","wgerstung@gibson4.com","wpowers@gibson4.com","lshepherd@gibson4.com"]  # Replace with actual emails
+    cc_recipients = ["bburchett@gibson4.com","wgerstung@gibson4.com","wpowers@gibson4.com","lshepherd@gibson4.com"]
     
     msg = MIMEMultipart()
     msg['From'] = sender_email
@@ -100,10 +99,7 @@ def send_email(recipient_email, first_name, last_name, total_score):
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
         server.login(sender_email, sender_password)
-        
-        # Get all recipients for sending (primary recipient + CC recipients)
         all_recipients = [recipient_email] + cc_recipients
-        
         server.send_message(msg, sender_email, all_recipients)
         server.quit()
         return True
@@ -118,154 +114,44 @@ def calculate_score(responses):
     return total_score
 
 def main():
+    # Initial page config
     st.set_page_config(
         page_title="Negotiations Survey",
         page_icon="📊",
-        layout="centered"
+        layout="centered",
+        initial_sidebar_state="collapsed"
     )
-    
-    # Add JavaScript to scroll to top when page changes
-    st.markdown("""
-        <script>
-            var observer = new MutationObserver(function(mutations) {
-                window.scrollTo(0, 0);
-            });
-            
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
-        </script>
-    """, unsafe_allow_html=True)
-    
+
+    # CSS for fixed header and scroll behavior
     st.markdown("""
         <style>
-        /* Responsive layout */
+        #MainMenu {visibility: hidden;}
+        header {visibility: hidden;}
+        .stApp {
+            margin-top: -80px;
+        }
         .main .block-container {
             max-width: 1200px;
-            padding-top: 2rem;
+            padding-top: 30px;
             padding-bottom: 2rem;
         }
-        
-        /* Content width control */
-        .content-wrapper {
-            width: min(90%, 800px);
-            margin: 0 auto;
+        .element-container, .stMarkdown {
+            width: 100% !important;
         }
-        
-        /* Radio button styling */
         .stRadio > div {
-            padding: 12px;
-            background-color: var(--background-color);
+            padding: 10px;
+            background-color: #f0f2f6;
             border-radius: 8px;
             margin: 8px 0;
-            width: 100%;
         }
-        
-        .stRadio > div > div {
-            gap: 8px !important;
-        }
-        
-        .stRadio > div > div > label {
-            padding: 8px 16px !important;
-            margin: 4px 0;
-            width: 100%;
-        }
-        
-        /* Dark mode support */
         @media (prefers-color-scheme: dark) {
             .stRadio > div {
                 background-color: rgba(255, 255, 255, 0.1);
             }
-            .stRadio label {
-                color: white !important;
-            }
-            .question-text {
-                color: white !important;
-            }
-            .results-container {
-                background-color: rgba(255, 255, 255, 0.1) !important;
-            }
-            .results-container h1 {
-                color: #3b82f6 !important;
-            }
-        }
-        
-        /* Progress indicator */
-        .stProgress {
-            margin: 1.5rem 0;
-        }
-        
-        /* Question styling */
-        .question-text {
-            margin: 1.5rem 0 0.75rem 0;
-            font-size: 1.1rem;
-            line-height: 1.5;
-        }
-        
-        /* Results styling */
-        .results-container {
-            padding: 2rem;
-            background-color: #f8fafc;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            margin: 2rem 0;
-        }
-        
-        .results-container h2 {
-            margin-bottom: 1rem;
-            font-size: 1.5rem;
-        }
-        
-        .results-container h1 {
-            font-size: clamp(2rem, 5vw, 3.5rem);
-            font-weight: bold;
-            color: #2563eb;
-            margin: 1.5rem 0;
-        }
-        
-        /* Mobile optimization */
-        @media (max-width: 640px) {
-            .main .block-container {
-                padding: 1rem;
-            }
-            
-            .content-wrapper {
-                width: 95%;
-            }
-            
-            .stRadio > div {
-                padding: 8px;
-            }
-            
-            .question-text {
-                font-size: 1rem;
-            }
-        }
-
-        /* Custom width for elements */
-        .element-container {
-            width: 100% !important;
-        }
-        
-        .css-1544g2n {
-            padding: 0 !important;
-        }
-        
-        .css-1y4p8pa {
-            max-width: none !important;
-            width: 100% !important;
-        }
-        
-        .stMarkdown {
-            width: 100% !important;
         }
         </style>
     """, unsafe_allow_html=True)
-    
-    st.markdown('<div class="content-wrapper">', unsafe_allow_html=True)
-    
+
     # Initialize session state
     if 'page' not in st.session_state:
         st.session_state.page = 'intro'
@@ -277,187 +163,144 @@ def main():
         st.session_state.first_name = ''
     if 'last_name' not in st.session_state:
         st.session_state.last_name = ''
-    if 'email_validated' not in st.session_state:
-        st.session_state.email_validated = False
-    if 'scroll_to_top' not in st.session_state:
-        st.session_state.scroll_to_top = True
+    if 'container' not in st.session_state:
+        st.session_state.container = st.empty()
 
-    # Function to change page and trigger scroll
-    def change_page(new_page):
-        st.session_state.page = new_page
-        st.session_state.scroll_to_top = True
-        st.rerun()
-
-    # Handle page navigation with auto-scroll
-    if st.session_state.scroll_to_top:
-        st.markdown("""
-            <script>
-                window.scrollTo(0, 0);
-            </script>
-        """, unsafe_allow_html=True)
-        st.session_state.scroll_to_top = False
-    
-    if st.session_state.page == 'intro':
-        st.title("🤝 Negotiations Training")
-        st.header("NEGOTIATION SURVEY")
-        
-        st.markdown("""
-        ### Purpose
-        This activity is designed to help you estimate your current negotiation skills.
-        
-        ### Information
-        The survey focuses on your negotiating personality and your propensity to negotiate.
-        Many people shy away from negotiating, preferring a quiet life. This survey will help
-        you understand your natural inclination towards negotiation.
-        
-        ### Instructions
-        * The survey contains 26 questions
-        * Be honest with yourself
-        * Take your time to answer each question thoughtfully
-        * Your score will be calculated automatically
-        * Results will be emailed to you upon completion
-        
-        ### Time Required
-        Approximately 20 minutes
-        """)
-        
-        st.markdown("---")
-        
-        st.markdown("### 📧 Enter Your Information")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            first_name = st.text_input(
-                "First Name:",
-                value=st.session_state.first_name,
-                key="first_name_input"
-            )
-        
-        with col2:
-            last_name = st.text_input(
-                "Last Name:",
-                value=st.session_state.last_name,
-                key="last_name_input"
-            )
+    # Create a container for the main content
+    with st.session_state.container.container():
+        if st.session_state.page == 'intro':
+            st.title("🤝 Negotiations Training")
+            st.header("NEGOTIATION SURVEY")
             
-        email_input = st.text_input(
-            "Email address:",
-            value=st.session_state.email,
-            key="email_input",
-            help="Please enter a valid email address to receive your results"
-        )
-
-        if email_input and first_name and last_name:
-            if is_valid_email(email_input):
-                st.session_state.email = email_input
-                st.session_state.first_name = first_name
-                st.session_state.last_name = last_name
-                st.session_state.email_validated = True
-                
-                if validate_email_connection():
-                    st.success("✅ Information verified successfully!")
-                    if st.button("Begin Survey", key="start_survey", use_container_width=True):
-                        change_page('survey')
+            st.markdown("""
+            ### Purpose
+            This activity is designed to help you estimate your current negotiation skills.
+            
+            ### Information
+            The survey focuses on your negotiating personality and your propensity to negotiate.
+            Many people shy away from negotiating, preferring a quiet life. This survey will help
+            you understand your natural inclination towards negotiation.
+            
+            ### Instructions
+            * The survey contains 26 questions
+            * Be honest with yourself
+            * Take your time to answer each question thoughtfully
+            * Your score will be calculated automatically
+            * Results will be emailed to you upon completion
+            
+            ### Time Required
+            Approximately 20 minutes
+            """)
+            
+            st.markdown("### 📧 Enter Your Information")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                first_name = st.text_input("First Name:", value=st.session_state.first_name)
+            with col2:
+                last_name = st.text_input("Last Name:", value=st.session_state.last_name)
+            
+            email = st.text_input("Email address:", value=st.session_state.email)
+            
+            if email and first_name and last_name:
+                if is_valid_email(email):
+                    st.session_state.email = email
+                    st.session_state.first_name = first_name
+                    st.session_state.last_name = last_name
+                    
+                    if validate_email_connection():
+                        st.success("✅ Information verified successfully!")
+                        if st.button("Begin Survey", use_container_width=True):
+                            st.session_state.container.empty()
+                            st.session_state.page = 'survey'
+                            st.rerun()
                 else:
-                    st.error("Unable to verify email connection. Please try again later.")
+                    st.error("Please enter a valid email address")
             else:
-                st.error("Please enter a valid email address")
-        else:
-            st.info("Please enter all required information to begin the survey")
-    
-    elif st.session_state.page == 'survey':
-        st.markdown(f"""📧 Results will be sent to: **{st.session_state.first_name} {st.session_state.last_name}** 
-        ({st.session_state.email})""")
-        st.markdown("---")
-        
-        st.title("Negotiator Survey")
-        st.subheader("How Good Are You As A Negotiator?")
-        
-        try:
-            with open('content/quiz_data.json', 'r', encoding='utf-8') as f:
-                questions = json.load(f)
-        except FileNotFoundError:
-            st.error("Question file not found. Please ensure 'quiz_data.json' exists in the current directory.")
-            return
-        except json.JSONDecodeError:
-            st.error("Error reading questions file. Please ensure the JSON format is correct.")
-            return
-        except Exception as e:
-            st.error(f"An error occurred while loading questions: {str(e)}")
-            return
-        
-        progress = len(st.session_state.responses) / len(questions)
-        st.progress(progress)
-        st.write(f"Progress: {int(progress * 100)}% ({len(st.session_state.responses)}/26 questions answered)")
-        
-        for q_num in range(1, 27):
-            question = questions[str(q_num)]
+                st.info("Please enter all required information to begin the survey")
+
+        elif st.session_state.page == 'survey':
+            st.markdown(f"""📧 Results will be sent to: **{st.session_state.first_name} {st.session_state.last_name}** 
+            ({st.session_state.email})""")
+            st.markdown("---")
+            
+            st.title("Negotiator Survey")
+            st.subheader("How Good Are You As A Negotiator?")
+            
+            try:
+                with open('content/quiz_data.json', 'r') as f:
+                    questions = json.load(f)
+            except FileNotFoundError:
+                questions = json.loads(st.session_state.get('quiz_data', '{}'))
+            
+            progress = len(st.session_state.responses) / 26
+            st.progress(progress)
+            st.write(f"Progress: {int(progress * 100)}% ({len(st.session_state.responses)}/26 questions answered)")
+            
+            for q_num in range(1, 27):
+                question = questions[str(q_num)]
+                st.markdown(f"**{q_num}. {question['text']}**")
+                options = question['options']
+                response = st.radio(
+                    f"Question {q_num}",
+                    options.items(),
+                    format_func=lambda x: x[1],
+                    key=f"q{q_num}",
+                    index=None,
+                    label_visibility="collapsed"
+                )
+                if response:
+                    st.session_state.responses[str(q_num)] = response[0]
+            
+            st.markdown("---")
+            
+            if len(st.session_state.responses) == 26:
+                if st.button("Submit Survey", use_container_width=True):
+                    st.session_state.container.empty()
+                    st.session_state.page = 'results'
+                    st.rerun()
+            else:
+                st.warning("Please answer all questions before submitting.")
+
+        elif st.session_state.page == 'results':
+            st.markdown(f"""📧 Results will be sent to: **{st.session_state.first_name} {st.session_state.last_name}** 
+            ({st.session_state.email})""")
+            st.markdown("---")
+            
+            total_score = calculate_score(st.session_state.responses)
+            
+            st.title("Survey Results")
             st.markdown(f"""
-                <div class="question-text">
-                    <strong>{q_num}. {question['text']}</strong>
-                </div>
+            <div style="text-align: center; padding: 2rem; background-color: #f0f2f6; border-radius: 10px;">
+                <h2>Your Negotiation Quotient</h2>
+                <h1 style="font-size: 3.5rem; color: #2196F3;">{total_score}</h1>
+                <p>(Score range: -298 to +341)</p>
+            </div>
             """, unsafe_allow_html=True)
-            options = question['options']
-            response = st.radio(
-                f"Question {q_num}",
-                options.items(),
-                format_func=lambda x: x[1],
-                key=f"q{q_num}",
-                index=None,
-                label_visibility="collapsed"
-            )
-            if response:
-                st.session_state.responses[str(q_num)] = response[0]
-        
-        st.markdown("---")
-        
-        if len(st.session_state.responses) == 26:
-            if st.button("Submit Survey", use_container_width=True):
-                change_page('results')
-        else:
-            st.warning("Please answer all questions before submitting.")
-    
-    elif st.session_state.page == 'results':
-        st.markdown(f"""📧 Results will be sent to: **{st.session_state.first_name} {st.session_state.last_name}** 
-        ({st.session_state.email})""")
-        st.markdown("---")
-        
-        st.title("Survey Results")
-        
-        total_score = calculate_score(st.session_state.responses)
-        
-        st.markdown(f"""
-        <div class="results-container">
-            <h2>Your Negotiation Quotient</h2>
-            <h1>{total_score}</h1>
-            <p>(Score range: -298 to +341)</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("### Score Interpretation")
-        if total_score >= 250:
-            st.success("🌟 You are probably a pretty good negotiator already!")
-        elif total_score >= 181:
-            st.info("✨ You already have many of the traits which contribute to successful negotiating.")
-        else:
-            st.warning("📚 You should pay particular attention to negotiation training materials.")
-        
-        with st.spinner("Sending results to your email..."):
-            if send_email(st.session_state.email, st.session_state.first_name, 
-                         st.session_state.last_name, total_score):
-                st.success("✅ Results have been sent to your email!")
+            
+            st.markdown("### Score Interpretation")
+            if total_score >= 250:
+                st.success("🌟 You are probably a pretty good negotiator already!")
+            elif total_score >= 181:
+                st.info("✨ You already have many of the traits which contribute to successful negotiating.")
             else:
-                st.error("Failed to send results. Please contact support.")
-        
-        if st.button("Take Survey Again", use_container_width=True):
-            st.session_state.responses = {}
-            st.session_state.first_name = ''
-            st.session_state.last_name = ''
-            st.session_state.email = ''
-            change_page('intro')
-    
-    st.markdown('</div>', unsafe_allow_html=True)
+                st.warning("📚 You should pay particular attention to negotiation training materials.")
+            
+            with st.spinner("Sending results to your email..."):
+                if send_email(st.session_state.email, st.session_state.first_name, 
+                            st.session_state.last_name, total_score):
+                    st.success("✅ Results have been sent to your email!")
+                else:
+                    st.error("Failed to send results. Please contact support.")
+            
+            if st.button("Take Survey Again", use_container_width=True):
+                st.session_state.responses = {}
+                st.session_state.first_name = ''
+                st.session_state.last_name = ''
+                st.session_state.email = ''
+                st.session_state.container.empty()
+                st.session_state.page = 'intro'
+                st.rerun()
 
 if __name__ == "__main__":
     main()
