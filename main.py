@@ -133,7 +133,8 @@ def main():
         .main .block-container {
             max-width: 1200px;
             padding-top: 30px;
-            padding-bottom: 2rem;
+            padding-bottom: 0;  /* Removed bottom padding */
+            margin-bottom: 0;   /* Removed bottom margin */
         }
         .element-container, .stMarkdown {
             width: 100% !important;
@@ -148,6 +149,16 @@ def main():
             .stRadio > div {
                 background-color: rgba(255, 255, 255, 0.1);
             }
+        }
+        footer {
+            visibility: hidden;
+        }
+        /* Ensure content starts at top when navigating */
+        .main {
+            scroll-behavior: auto !important;
+        }
+        .stButton button {
+            margin-bottom: 0;
         }
         </style>
     """, unsafe_allow_html=True)
