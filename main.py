@@ -62,7 +62,7 @@ def send_email(recipient_email, first_name, last_name, total_score):
     msg['Subject'] = "Your Negotiation Survey Results"
     
     if total_score >= 250:
-        interpretation = "You are probably a pretty good negotiator already!"
+        interpretation = "You are probably a pretty good negotiator already."
     elif total_score >= 181:
         interpretation = "You already have many of the traits which contribute to successful negotiating."
     else:
@@ -209,28 +209,32 @@ def main():
             
             col1, col2 = st.columns(2)
             with col1:
-                first_name = st.text_input("First Name:", value=st.session_state.first_name)
+                first_name = st.text_input("First Name:", value=st.session_state.first_name, on_change=None)
+                if first_name:
+                    st.session_state.first_name = first_name
             with col2:
-                last_name = st.text_input("Last Name:", value=st.session_state.last_name)
+                last_name = st.text_input("Last Name:", value=st.session_state.last_name, on_change=None)
+                if last_name:
+                    st.session_state.last_name = last_name
             
-            email = st.text_input("Email address:", value=st.session_state.email)
+            email = st.text_input("Email address:", value=st.session_state.email, on_change=None)
+            if email:
+                st.session_state.email = email
+            
+            start_button = st.button("Begin Survey", use_container_width=True, 
+                                   disabled=not (email and first_name and last_name and 
+                                               is_valid_email(email) and validate_email_connection()))
             
             if email and first_name and last_name:
-                if is_valid_email(email):
-                    st.session_state.email = email
-                    st.session_state.first_name = first_name
-                    st.session_state.last_name = last_name
-                    
-                    if validate_email_connection():
-                        st.success("✅ Information verified successfully!")
-                        if st.button("Begin Survey", use_container_width=True):
-                            st.session_state.container.empty()
-                            st.session_state.page = 'survey'
-                            st.rerun()
-                else:
+                if not is_valid_email(email):
                     st.error("Please enter a valid email address")
             else:
                 st.info("Please enter all required information to begin the survey")
+            
+            if start_button:
+                st.session_state.container.empty()
+                st.session_state.page = 'survey'
+                st.rerun()
 
         elif st.session_state.page == 'survey':
             st.markdown(f"""📧 Results will be sent to: **{st.session_state.first_name} {st.session_state.last_name}** 
@@ -246,7 +250,7 @@ def main():
             except FileNotFoundError:
                 questions = json.loads(st.session_state.get('quiz_data', '{}'))
             
-            progress = len(st.session_state.responses) / 26
+            progress = (len(st.session_state.responses) + 1) / 26
             st.progress(progress)
             st.write(f"Progress: {int(progress * 100)}% ({len(st.session_state.responses)}/26 questions answered)")
             
