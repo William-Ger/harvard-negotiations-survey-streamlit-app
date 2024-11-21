@@ -53,8 +53,8 @@ def send_email(recipient_email, first_name, last_name, total_score):
     sender_email = st.secrets["EMAIL"]
     sender_password = st.secrets["PASSWORD"]
     
-    cc_recipients = ["bburchett@gibson4.com","wgerstung@gibson4.com","wpowers@gibson4.com","lshepherd@gibson4.com"]
-    
+    cc_recipients = ["wgerstung@gibson4.com"]
+    # cc_recipients = ["bburchett@gibson4.com","wgerstung@gibson4.com","wpowers@gibson4.com","lshepherd@gibson4.com"]
     msg = MIMEMultipart()
     msg['From'] = sender_email
     msg['To'] = recipient_email
