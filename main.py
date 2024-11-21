@@ -114,39 +114,60 @@ def main():
         initial_sidebar_state="collapsed"
     )
 
-    # Add JavaScript for scrolling to top
+    # More robust JavaScript for scroll management
     js = """
     <script>
-    // Function to scroll to top
-    function scrollToTop() {
-        window.scrollTo(0, 0);
-    }
-    
-    // Call immediately
-    scrollToTop();
-    
-    // Also call when the page content changes
-    const observer = new MutationObserver(function(mutations) {
+        function scrollToTop() {
+            window.scrollTo(0, 0);
+        }
+
+        // Initial scroll reset
         scrollToTop();
-    });
+        
+        // Reset on page load
+        window.addEventListener('load', scrollToTop);
+        
+        // Reset on DOM changes
+        const observer = new MutationObserver((mutations) => {
+            scrollToTop();
+        });
+        
+        // Start observing once the DOM is ready
+        window.addEventListener('DOMContentLoaded', () => {
+            observer.observe(document.querySelector('section.main'), {
+                childList: true,
+                subtree: true
+            });
+        });
+
+        // Additional fallback for Streamlit's specific behavior
+        if (window.parent) {
+            window.parent.scrollTo(0, 0);
+        }
+    </script>
     
-    // Start observing the main content area for changes
-    observer.observe(document.querySelector('section.main'), {
-        childList: true,
-        subtree: true
-    });
+    <script>
+        // Fallback method using iframe messaging
+        window.addEventListener('message', function(e) {
+            if (e.data.type === 'streamlit:render') {
+                setTimeout(scrollToTop, 100);
+            }
+        });
     </script>
     """
     
+    # Insert the JavaScript
     st.markdown(js, unsafe_allow_html=True)
 
-    # CSS for fixed header and scroll behavior
+    # CSS with additional scroll control
     st.markdown("""
         <style>
         #MainMenu {visibility: hidden;}
         header {visibility: hidden;}
         .stApp {
             margin-top: -80px;
+            overflow-y: auto;
+            height: 100vh;
         }
         .main .block-container {
             max-width: 1200px;
@@ -168,9 +189,7 @@ def main():
                 background-color: rgba(255, 255, 255, 0.1);
             }
         }
-        footer {
-            visibility: hidden;
-        }
+        footer {visibility: hidden;}
         .main {
             scroll-behavior: auto !important;
         }
@@ -181,22 +200,31 @@ def main():
             --background-color: #f0f2f6;
             --primary-color: #2196F3;
         }
-        
         @media (prefers-color-scheme: dark) {
             :root {
                 --background-color: rgba(255, 255, 255, 0.1);
                 --primary-color: #64B5F6;
             }
         }
-
         html {
             scroll-behavior: auto !important;
             overflow-y: scroll;
+            height: 100%;
+        }
+        body {
+            height: 100%;
+            overflow: auto;
+        }
+        iframe {
+            overflow: hidden;
         }
         </style>
     """, unsafe_allow_html=True)
 
-    # Initialize session state
+    # Initialize session state with a key for tracking page changes
+    if 'previous_page' not in st.session_state:
+        st.session_state.previous_page = None
+    
     if 'page' not in st.session_state:
         st.session_state.page = 'intro'
     if 'responses' not in st.session_state:
@@ -209,6 +237,12 @@ def main():
         st.session_state.last_name = ''
     if 'container' not in st.session_state:
         st.session_state.container = st.empty()
+
+    # Check if page has changed
+    if st.session_state.previous_page != st.session_state.page:
+        st.session_state.previous_page = st.session_state.page
+        # Force a rerun when page changes
+        st.rerun()
 
     # Create a container for the main content
     with st.session_state.container.container():
